@@ -70,17 +70,25 @@ def get_download_data(file_name = video_list_file):
 def download_videos(need_audio=True):
 
     download_data = get_download_data(file_name = video_list_file)
+    urls = list(zip(*download_data))[1]
 
-    for download in download_data:
+    for i,download in enumerate(download_data):
 
         name, url, time_ranges = download
-        output_filename = os.path.join(edited_files_dir, name+'.mp4')
+                
 
-        yt = YouTube(url)
-        videos = yt.streams
-        video = find_max_res_video(videos)
-        video.download(raw_files_dir)
-        extension = get_type(video)
+        output_filename = os.path.join(edited_files_dir, name+'.mp4')
+        
+        if i==0 or url not in urls[:i]:
+            yt = YouTube(url)
+            videos = yt.streams
+            video = find_max_res_video(videos)
+            print("Video "+name+" downloading...")
+            video.download(raw_files_dir)
+            print("Video "+name+" finished downloading!")
+            extension = get_type(video)
+        else:
+            print("The url of video for "+name+" had previously been downloaded!")
 
         list_of_files = glob.glob(os.path.join(raw_files_dir,"*"))
         file_dir = max(list_of_files, key=os.path.getctime)
@@ -116,8 +124,12 @@ def download_videos(need_audio=True):
         concat_clip.write_videofile(output_filename)
         concat_clip.close()
 
+
 need_audio_str = input("Need audio? (y/n)")
-need_audio_bool = bool(need_audio_str)
+if need_audio_str == 'y':
+    need_audio_bool = True
+if need_audio_str == 'n':
+    need_audio_bool = False
 
 if __name__ == '__main__':
     download_videos(need_audio = need_audio_bool)
